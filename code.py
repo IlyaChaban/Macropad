@@ -49,6 +49,7 @@ class App:
             else:  # Key not in use, no label or LED
                 macropad.pixels[i] = 0
                 group[i].text = ''
+		#next sheet isn't working
 		#icons_sheet, palette = adafruit_imageload.load(BITMAPS_FOLDER+ '/' + self.icons,
 		#											bitmap=displayio.Bitmap,
 		#											palette=displayio.Palette))
