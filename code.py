@@ -20,54 +20,57 @@ from adafruit_display_text import label
 from adafruit_macropad import MacroPad
 import adafruit_imageload
 
-
 # CONFIGURABLES ------------------------
 
-MACRO_FOLDER = '/macros'
-BITMAPS_FOLDER = '/bitmaps'
+MACRO_FOLDER = "/macros"
+BITMAPS_FOLDER = "/bitmaps"
 
 
 # CLASSES AND FUNCTIONS ----------------
 
+
 class App:
-    """ Class representing a host-side application, for which we have a set
-        of macro sequences. Project code was originally more complex and
-        this was helpful, but maybe it's excessive now?"""
+    """Class representing a host-side application, for which we have a set
+    of macro sequences. Project code was originally more complex and
+    this was helpful, but maybe it's excessive now?"""
+
     def __init__(self, appdata):
-        self.name = appdata['name']
-        self.macros = appdata['macros']
-        self.icons = appdata['icons']
+        self.name = appdata["name"]
+        self.macros = appdata["macros"]
+        self.icons = appdata["icons"]
 
     def switch(self):
-        """ Activate application settings; update OLED labels and LED
-            colors. """
-        group[13].text = self.name   # Application name
+        """Activate application settings; update OLED labels and LED
+        colors."""
+        group[13].text = self.name  # Application name
         for i in range(12):
-            if i < len(self.macros): # Key in use, set label + LED color
+            if i < len(self.macros):  # Key in use, set label + LED color
                 macropad.pixels[i] = self.macros[i][0]
                 group[i].text = self.macros[i][1]
             else:  # Key not in use, no label or LED
                 macropad.pixels[i] = 0
-                group[i].text = ''
-		#icons, palette = adafruit_imageload.load( BITMAPS_FOLDER+ '/' + self.icons,
-		#												bitmap = displayio.Bitmap,
-		#												palette = displayio.Palette )
-		#												
-		#icons = displayio.TileGrid(	icons,
-		#							pixel_shader=palette,
-		#							width=1,
-		#							height=1,
-		#							tile_width=64,
-		#							tile_height=64,
-		#							default_tile=0)
-				
-		macropad.keyboard.release_all()
+                group[i].text = ""
+        macropad.keyboard.release_all()
         macropad.consumer_control.release()
         macropad.mouse.release_all()
         macropad.stop_tone()
         macropad.pixels.show()
         macropad.display.refresh()
 
+    def get_icons(self):
+        sprite_sheet, palette = adafruit_imageload.load(BITMAPS_FOLDER + "/" + self.icons,
+                                                bitmap=displayio.Bitmap,
+                                                palette=displayio.Palette)
+        icons = displayio.TileGrid(
+            sprite_sheet,
+            pixel_shader=palette,
+            width=1,
+            height=1,
+            tile_width=64,
+            tile_height=64,
+            default_tile=0,
+        )
+        return icons
 
 
 # INITIALIZATION -----------------------
@@ -81,38 +84,60 @@ group = displayio.Group()
 for key_index in range(12):
     x = key_index % 3
     y = key_index // 3
-    group.append(label.Label(terminalio.FONT, text='', color=0xFFFFFF,
-                             anchored_position=((macropad.display.width - 1) * x / 2,
-                                                macropad.display.height - 1 -
-                                                (3 - y) * 12),
-                             anchor_point=(x / 2, 1.0)))
+    group.append(
+        label.Label(
+            terminalio.FONT,
+            text="",
+            color=0xFFFFFF,
+            anchored_position=(
+                (macropad.display.width - 1) * x / 2,
+                macropad.display.height - 1 - (3 - y) * 12,
+            ),
+            anchor_point=(x / 2, 1.0),
+        )
+    )
 group.append(Rect(0, 0, macropad.display.width, 12, fill=0xFFFFFF))
-group.append(label.Label(terminalio.FONT, text='', color=0x000000,
-                         anchored_position=(macropad.display.width//2, -2),
-                         anchor_point=(0.5, 0.0)))
+group.append(
+    label.Label(
+        terminalio.FONT,
+        text="",
+        color=0x000000,
+        anchored_position=(macropad.display.width // 2, -2),
+        anchor_point=(0.5, 0.0),
+    )
+)
 macropad.display.show(group)
 
-
-#group for displaying logos
+# group for displaying logos
 group_for_logos_icons = displayio.Group()
-group_for_logos_icons.append(Rect(32, 0, 64, 64, fill=0x000000))
+group_for_logos_icons.x = 31
+group_for_logos_icons.y = 0
+group_for_logos_icons.append(Rect(0, 0, 64, 64, fill=0xFFFFFF))
 # Load all the macro key setups from .py files in MACRO_FOLDER
 apps = []
 files = os.listdir(MACRO_FOLDER)
 files.sort()
 for filename in files:
-    if filename.endswith('.py') and not filename.startswith('._'):
+    if filename.endswith(".py") and not filename.startswith("._"):
         try:
-            module = __import__(MACRO_FOLDER + '/' + filename[:-3])
+            module = __import__(MACRO_FOLDER + "/" + filename[:-3])
             apps.append(App(module.app))
-        except (SyntaxError, ImportError, AttributeError, KeyError, NameError,
-                IndexError, TypeError) as err:
+        except (
+            SyntaxError,
+            ImportError,
+            AttributeError,
+            KeyError,
+            NameError,
+            IndexError,
+            TypeError,
+        ) as err:
             print("ERROR in", filename)
             import traceback
+
             traceback.print_exception(err, err, err.__traceback__)
 
 if not apps:
-    group[13].text = 'NO MACRO FILES FOUND'
+    group[13].text = "NO MACRO FILES FOUND"
     macropad.display.refresh()
     while True:
         pass
@@ -121,7 +146,7 @@ last_position = None
 last_encoder_switch = macropad.encoder_switch_debounced.pressed
 app_index = 0
 apps[app_index].switch()
-
+icons = apps[app_index].get_icons()
 
 # MAIN LOOP ----------------------------
 
@@ -132,6 +157,7 @@ while True:
         app_index = position % len(apps)
         apps[app_index].switch()
         last_position = position
+        icons = apps[app_index].get_icons()
 
     # Handle encoder button. If state has changed, and if there's a
     # corresponding macro, set up variables to act on this just like
@@ -141,13 +167,13 @@ while True:
     if encoder_switch != last_encoder_switch:
         last_encoder_switch = encoder_switch
         if len(apps[app_index].macros) < 13:
-            continue    # No 13th macro, just resume main loop
-        key_number = 12 # else process below as 13th macro
+            continue  # No 13th macro, just resume main loop
+        key_number = 12  # else process below as 13th macro
         pressed = encoder_switch
     else:
         event = macropad.keys.events.get()
         if not event or event.key_number >= len(apps[app_index].macros):
-            continue # No key events, or no corresponding macro, resume loop
+            continue  # No key events, or no corresponding macro, resume loop
         key_number = event.key_number
         pressed = event.pressed
 
@@ -164,15 +190,15 @@ while True:
         # String (e.g. "Foo"): corresponding keys pressed & released
         # List []: one or more Consumer Control codes (can also do float delay)
         # Dict {}: mouse buttons/motion (might extend in future)
-        if key_number < 12: # No pixel for encoder button
+        if key_number < 12:  # No pixel for encoder button
             macropad.pixels[key_number] = 0x000000
             macropad.pixels.show()
-            # show logo on display 
-			
-			#group_for_logos_icons.append(icons[key_number % 3, key_number // 3])			
+            # show logo on display
+            #group_for_logos_icons.append(icons[key_number])
             macropad.display.show(group_for_logos_icons)
             macropad.display.refresh()
-            
+        # group_for_logos_icons.append(icons[key_number % 3,key_number // 3]
+
         for item in sequence:
             if isinstance(item, int):
                 if item >= 0:
@@ -191,22 +217,24 @@ while True:
                     if isinstance(code, float):
                         time.sleep(code)
             elif isinstance(item, dict):
-                if 'buttons' in item:
-                    if item['buttons'] >= 0:
-                        macropad.mouse.press(item['buttons'])
+                if "buttons" in item:
+                    if item["buttons"] >= 0:
+                        macropad.mouse.press(item["buttons"])
                     else:
-                        macropad.mouse.release(-item['buttons'])
-                macropad.mouse.move(item['x'] if 'x' in item else 0,
-                                    item['y'] if 'y' in item else 0,
-                                    item['wheel'] if 'wheel' in item else 0)
-                if 'tone' in item:
-                    if item['tone'] > 0:
+                        macropad.mouse.release(-item["buttons"])
+                macropad.mouse.move(
+                    item["x"] if "x" in item else 0,
+                    item["y"] if "y" in item else 0,
+                    item["wheel"] if "wheel" in item else 0,
+                )
+                if "tone" in item:
+                    if item["tone"] > 0:
                         macropad.stop_tone()
-                        macropad.start_tone(item['tone'])
+                        macropad.start_tone(item["tone"])
                     else:
                         macropad.stop_tone()
-                elif 'play' in item:
-                    macropad.play_file(item['play'])
+                elif "play" in item:
+                    macropad.play_file(item["play"])
     else:
         # Release any still-pressed keys, consumer codes, mouse buttons
         # Keys and mouse buttons are individually released this way (rather
@@ -218,13 +246,13 @@ while True:
                 if item >= 0:
                     macropad.keyboard.release(item)
             elif isinstance(item, dict):
-                if 'buttons' in item:
-                    if item['buttons'] >= 0:
-                        macropad.mouse.release(item['buttons'])
-                elif 'tone' in item:
+                if "buttons" in item:
+                    if item["buttons"] >= 0:
+                        macropad.mouse.release(item["buttons"])
+                elif "tone" in item:
                     macropad.stop_tone()
         macropad.consumer_control.release()
-        if key_number < 12: # No pixel for encoder button
+        if key_number < 12:  # No pixel for encoder button
             macropad.pixels[key_number] = apps[app_index].macros[key_number][0]
             macropad.pixels.show()
         macropad.display.show(group)
