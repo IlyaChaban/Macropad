@@ -18,7 +18,7 @@ import terminalio
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_text import label
 from adafruit_macropad import MacroPad
-#import adafruit_imageload
+import adafruit_imageload
 
 
 # CONFIGURABLES ------------------------
@@ -49,20 +49,25 @@ class App:
             else:  # Key not in use, no label or LED
                 macropad.pixels[i] = 0
                 group[i].text = ''
-		#next sheet isn't working
-		#icons_sheet, palette = adafruit_imageload.load(BITMAPS_FOLDER+ '/' + self.icons,
-		#											bitmap=displayio.Bitmap,
-		#											palette=displayio.Palette))
-		
-		#icons=displayio.TileGrid(bitmap, pixel_shader=palette, 
-		#						width=1, height=1, 
-		#						tile_width=64, tile height=64)
-        macropad.keyboard.release_all()
+		#icons, palette = adafruit_imageload.load( BITMAPS_FOLDER+ '/' + self.icons,
+		#												bitmap = displayio.Bitmap,
+		#												palette = displayio.Palette )
+		#												
+		#icons = displayio.TileGrid(	icons,
+		#							pixel_shader=palette,
+		#							width=1,
+		#							height=1,
+		#							tile_width=64,
+		#							tile_height=64,
+		#							default_tile=0)
+				
+		macropad.keyboard.release_all()
         macropad.consumer_control.release()
         macropad.mouse.release_all()
         macropad.stop_tone()
         macropad.pixels.show()
         macropad.display.refresh()
+
 
 
 # INITIALIZATION -----------------------
@@ -90,7 +95,7 @@ macropad.display.show(group)
 
 #group for displaying logos
 group_for_logos_icons = displayio.Group()
-group_for_logos_icons.append(Rect(32, 0, 64, 64, fill=0xFFFFFF))
+group_for_logos_icons.append(Rect(32, 0, 64, 64, fill=0x000000))
 # Load all the macro key setups from .py files in MACRO_FOLDER
 apps = []
 files = os.listdir(MACRO_FOLDER)
@@ -163,6 +168,8 @@ while True:
             macropad.pixels[key_number] = 0x000000
             macropad.pixels.show()
             # show logo on display 
+			
+			#group_for_logos_icons.append(icons[key_number % 3, key_number // 3])			
             macropad.display.show(group_for_logos_icons)
             macropad.display.refresh()
             
