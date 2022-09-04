@@ -267,3 +267,4 @@ while True:
             macropad.pixels.show()
         macropad.display.show(group)
         macropad.display.refresh()
+#END
