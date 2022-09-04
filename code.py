@@ -105,7 +105,6 @@ macropad.display.show(group)
 group_for_logos_icons = displayio.Group()
 group_for_logos_icons.x = 31
 group_for_logos_icons.y = 0
-group_for_logos_icons.append(Rect(0, 0, 64, 64, fill=0xFFFFFF))
 # Load all the macro key setups from .py files in MACRO_FOLDER
 apps = []
 files = os.listdir(MACRO_FOLDER)
@@ -140,7 +139,6 @@ last_encoder_switch = macropad.encoder_switch_debounced.pressed
 app_index = 0
 apps[app_index].switch()
 icons, palette = apps[app_index].get_icons()
-print('getting icons initially')
 pressed_icon = displayio.TileGrid(
                 icons,
                 pixel_shader=palette,
