@@ -21,7 +21,7 @@ app = {                      # REQUIRED dict, must be named 'app'
         # 3rd row ----------
         (0x000005, 'Reload', [Keycode.CONTROL, 'r']),
         (0x000005, 'Home', [Keycode.ALT, Keycode.HOME]),
-        (0x000005, 'Closed Tab', [Keycode.CONTROL, Keycode.SHIFT, 't']),
+        (0x000005, 'Clsd Tab', [Keycode.CONTROL, Keycode.SHIFT, 't']),
         # 4th row ----------
         (0x000000, 'Ada', [Keycode.CONTROL, 't', -Keycode.COMMAND,
                            'www.adafruit.com\n']),   # Adafruit in new window

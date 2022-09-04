@@ -58,19 +58,12 @@ class App:
         macropad.display.refresh()
 
     def get_icons(self):
-        sprite_sheet, palette = adafruit_imageload.load(BITMAPS_FOLDER + "/" + self.icons,
-                                                bitmap=displayio.Bitmap,
-                                                palette=displayio.Palette)
-        icons = displayio.TileGrid(
-            sprite_sheet,
-            pixel_shader=palette,
-            width=1,
-            height=1,
-            tile_width=64,
-            tile_height=64,
-            default_tile=0,
+        sprite_sheet, palette = adafruit_imageload.load(
+            BITMAPS_FOLDER + "/" + self.icons,
+            bitmap=displayio.Bitmap,
+            palette=displayio.Palette,
         )
-        return icons
+        return sprite_sheet, palette
 
 
 # INITIALIZATION -----------------------
@@ -146,18 +139,36 @@ last_position = None
 last_encoder_switch = macropad.encoder_switch_debounced.pressed
 app_index = 0
 apps[app_index].switch()
-icons = apps[app_index].get_icons()
+icons, palette = apps[app_index].get_icons()
+print('getting icons initially')
+pressed_icon = displayio.TileGrid(
+                icons,
+                pixel_shader=palette,
+                width=1,
+                height=1,
+                tile_width=64,
+                tile_height=64,
+            )
 
 # MAIN LOOP ----------------------------
 
 while True:
-    # Read encoder position. If it's changed, switch apps.
+    # Read encoder position. If it's changed, switch apps and icons.
     position = macropad.encoder
     if position != last_position:
         app_index = position % len(apps)
         apps[app_index].switch()
+        icons, palette = apps[app_index].get_icons()
+        pressed_icon = displayio.TileGrid(
+                icons,
+                pixel_shader=palette,
+                width=1,
+                height=1,
+                tile_width=64,
+                tile_height=64,
+            )
+        print('after switch')
         last_position = position
-        icons = apps[app_index].get_icons()
 
     # Handle encoder button. If state has changed, and if there's a
     # corresponding macro, set up variables to act on this just like
@@ -194,10 +205,11 @@ while True:
             macropad.pixels[key_number] = 0x000000
             macropad.pixels.show()
             # show logo on display
-            #group_for_logos_icons.append(icons[key_number])
+            pressed_icon[0, 0] = key_number;
+            group_for_logos_icons.append(pressed_icon)
             macropad.display.show(group_for_logos_icons)
             macropad.display.refresh()
-        # group_for_logos_icons.append(icons[key_number % 3,key_number // 3]
+            group_for_logos_icons.remove(pressed_icon)
 
         for item in sequence:
             if isinstance(item, int):
